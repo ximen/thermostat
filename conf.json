@@ -1,0 +1,164 @@
+{
+	"name": "Thermostat configuration",
+	"short_name": "thermo_config",
+	"version": 1,
+	"topics": [
+		{
+			"name": "WiFi",
+			"std_wifi": true,
+			"default_ssid": "Thermostat",
+			"default_psk": ""
+		},
+		{
+			"name": "Protocols",
+			"short_name": "protocols",
+			"elements": [
+				{
+					"name": "Bluetooth Mesh",
+					"short_name": "ble_mesh",
+					"type": "boolean"
+				},
+				{
+					"name": "MQTT",
+					"short_name": "mqtt",
+					"type": "boolean"
+				},
+				{
+					"name": "CAN",
+					"short_name": "can_bus",
+					"type": "boolean"
+				}
+			]
+		},
+		{
+			"name": "Bluetooth Mesh",
+			"std_ble_mesh": true,
+			"depends_on": "ble_mesh"
+		},
+		{
+			"name": "MQTT",
+			"std_mqtt": true,
+			"depends_on": "mqtt"
+		},
+		{
+			"name": "Sensors",
+			"short_name": "sensors",
+			"elements": [
+				{
+					"name": "Sensor 1 type",
+					"short_name": "sensor1_type",
+					"type": "int8"
+				},
+				{
+					"name": "Sensor 1 MQTT topic",
+					"short_name": "sensor1_mqtt",
+					"type": "array",
+					"size": 20,
+					"depends_on": "sensor1_type",
+					"depends_on_value": "1"
+				},
+				{
+					"name": "Sensor 1 Mesh Address",
+					"short_name": "sensor1_mesh",
+					"type": "array",
+					"size": 4,
+					"depends_on": "sensor1_type",
+					"depends_on_value": "2"
+				},
+				{
+					"name": "Sensor 2 type",
+					"short_name": "sensor2_type",
+					"type": "int8"
+				},
+				{
+					"name": "Sensor 2 MQTT topic",
+					"short_name": "sensor2_mqtt",
+					"type": "array",
+					"size": 20,
+					"depends_on": "sensor2_type",
+					"depends_on_value": "1"
+				},
+				{
+					"name": "Sensor 2 Mesh Address",
+					"short_name": "sensor2_mesh",
+					"type": "array",
+					"size": 4,
+					"depends_on": "sensor2_type",
+					"depends_on_value": "2"
+				},
+				{
+					"name": "Sensor 3 type",
+					"short_name": "sensor3_type",
+					"type": "int8"
+				},
+				{
+					"name": "Sensor 3 MQTT topic",
+					"short_name": "sensor3_mqtt",
+					"type": "array",
+					"size": 20,
+					"depends_on": "sensor3_type",
+					"depends_on_value": "1"
+				},
+				{
+					"name": "Sensor 3 Mesh Address",
+					"short_name": "sensor3_mesh",
+					"type": "array",
+					"size": 4,
+					"depends_on": "sensor3_type",
+					"depends_on_value": "2"
+				}
+			]
+		},
+		{
+			"name": "Zones",
+			"short_name": "zones",
+			"elements": [
+				{
+					"name": "Zone 1 temperature",
+					"short_name": "zone1_temp",
+					"type": "int8"
+				},
+				{
+					"name": "Zone 1 hysteresis",
+					"short_name": "zone1_hyst",
+					"type": "int8"
+				},
+				{
+					"name": "Zone 1 sensor",
+					"short_name": "zone1_sensor",
+					"type": "int8"
+				},
+				{
+					"name": "Zone 2 temperature",
+					"short_name": "zone2_temp",
+					"type": "int8"
+				},
+				{
+					"name": "Zone 2 hysteresis",
+					"short_name": "zone2_hyst",
+					"type": "int8"
+				},
+				{
+					"name": "Zone 2 sensor",
+					"short_name": "zone2_sensor",
+					"type": "int8"
+				},
+				{
+					"name": "Zone 3 temperature",
+					"short_name": "zone3_temp",
+					"type": "int8"
+				},
+				{
+					"name": "Zone 3 hysteresis",
+					"short_name": "zone3_hyst",
+					"type": "int8"
+				},
+				{
+					"name": "Zone 3 sensor",
+					"short_name": "zone3_sensor",
+					"type": "int8"
+				}
+			]
+		}
+	]
+}
