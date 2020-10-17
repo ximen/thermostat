@@ -11,7 +11,7 @@
 		},
 		{
 			"name": "Protocols",
-			"short_name": "protocols",
+			"short_name": "protocols_topic",
 			"elements": [
 				{
 					"name": "Bluetooth Mesh",
@@ -42,7 +42,7 @@
 		},
 		{
 			"name": "Sensors",
-			"short_name": "sensors",
+			"short_name": "sensors_topic",
 			"elements": [
 				{
 					"name": "Sensor 1 type",
@@ -111,7 +111,7 @@
 		},
 		{
 			"name": "Zones",
-			"short_name": "zones",
+			"short_name": "zones_topic",
 			"elements": [
 				{
 					"name": "Zone 1 temperature",
