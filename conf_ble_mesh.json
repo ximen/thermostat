@@ -1,0 +1,29 @@
+{
+    "device_name": "Thermostat x3",
+    "elements":[
+        {
+            "root": true
+        },{
+            "sig_models": [
+                {
+                    "model": "generic_sensor_client",
+                    "short_name": "sensor_0"
+                }
+            ]
+        }, {
+            "sig_models": [
+                {
+                    "model": "generic_sensor_client",
+                    "short_name": "sensor_1"
+                }
+            ]
+        }, {
+            "sig_models": [
+                {
+                    "model": "generic_sensor_client",
+                    "short_name": "sensor_2"
+                }
+            ]
+         }
+    ]
+}

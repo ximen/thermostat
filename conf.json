@@ -15,30 +15,28 @@
 			"elements": [
 				{
 					"name": "Bluetooth Mesh",
-					"short_name": "ble_mesh",
-					"type": "boolean"
+					"short_name": "ble_mesh_enable",
+					"type": "boolean",
+					"default": true
 				},
 				{
 					"name": "MQTT",
-					"short_name": "mqtt",
-					"type": "boolean"
+					"short_name": "mqtt_enablr",
+					"type": "boolean",
+					"default": true
 				},
 				{
 					"name": "CAN",
-					"short_name": "can_bus",
-					"type": "boolean"
+					"short_name": "can_bus_enable",
+					"type": "boolean",
+					"default": false
 				}
 			]
 		},
 		{
-			"name": "Bluetooth Mesh",
-			"std_ble_mesh": true,
-			"depends_on": "ble_mesh"
-		},
-		{
 			"name": "MQTT",
 			"std_mqtt": true,
-			"depends_on": "mqtt"
+			"depends_on": "mqtt_enable"
 		},
 		{
 			"name": "Sensors",
