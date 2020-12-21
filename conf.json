@@ -21,7 +21,7 @@
 				},
 				{
 					"name": "MQTT",
-					"short_name": "mqtt_enablr",
+					"short_name": "mqtt_enable",
 					"type": "boolean",
 					"default": true
 				},

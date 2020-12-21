@@ -10,9 +10,15 @@
 #include "esp_ble_mesh_defs.h"
 #include "esp_ble_mesh_networking_api.h"
 #include "esp_ble_mesh_sensor_model_api.h"
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
+#include "app_ds.h"
 
 #define TAG "MAIN"
+#define TASK_STACK_SIZE         4096
+#define TEMP_POLLING_PERIOD_MS  1000
 
+ds_bus_t    ds_buses[DS_BUS_NUMBER] = {0};
 app_config_cbs_t app_config_cbs;
 
 static uint16_t sensor_prop_id;
@@ -206,7 +212,34 @@ static void app_ble_mesh_sensor_client_cb(esp_ble_mesh_sensor_client_cb_event_t 
     }
 }
 
+static void ds_task(void *pvParameters){
+    while(1){
+        for(uint8_t i=0; i<DS_BUS_NUMBER; i++){
+            if(ds_buses[i].device_count > 0){
+                float readings[DS_MAX_DEVICES];
+                app_ds_read_temperature_all(&ds_buses[i], readings);
+                for (uint8_t j=0; j < ds_buses[i].device_count; j++)
+                    printf("Bus %d, device %d, value %2.1f\n", i, j, readings[j]);
+                    queue_temp(i, readings[0];)
+            }
+        }
+        vTaskDelay(TEMP_POLLING_PERIOD_MS / portTICK_PERIOD_MS);
+    }
+}
+
 void app_main(void){
     app_config_cbs.sensor_client = app_ble_mesh_sensor_client_cb;
     ESP_ERROR_CHECK(app_config_init(&app_config_cbs));		    // Initializing and loading configuration
+
+    ds_buses[0].pin = GPIO_NUM_32;
+    ds_buses[0].resolution = DS18B20_RESOLUTION_12_BIT;
+    ds_buses[1].pin = GPIO_NUM_33;
+    ds_buses[1].resolution = DS18B20_RESOLUTION_12_BIT;
+    app_ds_init(ds_buses);
+
+    ESP_LOGI(TAG, "Starting DS18b20 thread");
+    if (xTaskCreate(ds_task, "DS18b20", TASK_STACK_SIZE, NULL, 1, NULL) != pdPASS){
+        ESP_LOGE(TAG, "Error creating task!");
+        abort();
+    }
 }
