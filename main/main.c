@@ -13,6 +13,8 @@
 
 #define TAG "MAIN"
 
+app_config_cbs_t app_config_cbs;
+
 static uint16_t sensor_prop_id;
 
 void example_ble_mesh_send_sensor_message(uint32_t opcode)
@@ -79,7 +81,7 @@ static void example_ble_mesh_sensor_timeout(uint32_t opcode)
     example_ble_mesh_send_sensor_message(opcode);
 }
 
-static void example_ble_mesh_sensor_client_cb(esp_ble_mesh_sensor_client_cb_event_t event, esp_ble_mesh_sensor_client_cb_param_t *param){
+static void app_ble_mesh_sensor_client_cb(esp_ble_mesh_sensor_client_cb_event_t event, esp_ble_mesh_sensor_client_cb_param_t *param){
     ESP_LOGI(TAG, "Sensor client, event %u, addr 0x%04x", event, param->params->ctx.addr);
 
     if (param->error_code) {
@@ -205,18 +207,6 @@ static void example_ble_mesh_sensor_client_cb(esp_ble_mesh_sensor_client_cb_even
 }
 
 void app_main(void){
-    ESP_ERROR_CHECK(app_config_init());		    // Initializing and loading configuration
-    bool config_mesh_enable;
-    app_config_getBool("ble_mesh_enable", &config_mesh_enable);
-    if (config_mesh_enable){
-        ESP_LOGI(TAG, "BLE Mesh enabled");
-        esp_err_t err = bluetooth_init();
-        if (err) {
-            ESP_LOGE(TAG, "bluetooth_init failed (err %d)", err);
-            return;
-        }
-        esp_ble_mesh_register_sensor_client_callback(example_ble_mesh_sensor_client_cb);
-        app_config_ble_mesh_init();
-    }
-
+    app_config_cbs.sensor_client = app_ble_mesh_sensor_client_cb;
+    ESP_ERROR_CHECK(app_config_init(&app_config_cbs));		    // Initializing and loading configuration
 }
