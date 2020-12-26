@@ -12,7 +12,7 @@
 #include "ds18b20.h"
 
 #define DS_BUS_NUMBER   2   // Number of 1-Wire buses
-#define DS_MAX_DEVICES  3   // Max device number on single bus
+#define DS_MAX_DEVICES  1   // Max device number on single bus
 
 typedef struct {
     OneWireBus          *owb;
@@ -50,4 +50,4 @@ void app_ds_init(ds_bus_t *buses);
  *             - one of the error codes from the underlying flash storage driver
  */void app_ds_deinit(ds_bus_t *buses);
 
- void app_ds_read_temperature_all(ds_bus_t *bus, float *readings);
+ esp_err_t app_ds_read_temperature_all(ds_bus_t *bus, float *readings);

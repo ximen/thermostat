@@ -17,13 +17,13 @@
 					"name": "Bluetooth Mesh",
 					"short_name": "ble_mesh_enable",
 					"type": "boolean",
-					"default": true
+					"default": false
 				},
 				{
 					"name": "MQTT",
 					"short_name": "mqtt_enable",
 					"type": "boolean",
-					"default": true
+					"default": false
 				},
 				{
 					"name": "CAN",
@@ -114,12 +114,14 @@
 				{
 					"name": "Zone 1 temperature",
 					"short_name": "zone1_temp",
-					"type": "int8"
+					"type": "int8",
+					"default": 30
 				},
 				{
 					"name": "Zone 1 hysteresis",
 					"short_name": "zone1_hyst",
-					"type": "int8"
+					"type": "int8",
+					"default": 2
 				},
 				{
 					"name": "Zone 1 sensor",
@@ -129,12 +131,14 @@
 				{
 					"name": "Zone 2 temperature",
 					"short_name": "zone2_temp",
-					"type": "int8"
+					"type": "int8",
+					"default": 30
 				},
 				{
 					"name": "Zone 2 hysteresis",
 					"short_name": "zone2_hyst",
-					"type": "int8"
+					"type": "int8",
+					"default": 2
 				},
 				{
 					"name": "Zone 2 sensor",
@@ -144,12 +148,14 @@
 				{
 					"name": "Zone 3 temperature",
 					"short_name": "zone3_temp",
-					"type": "int8"
+					"type": "int8",
+					"default": 30
 				},
 				{
 					"name": "Zone 3 hysteresis",
 					"short_name": "zone3_hyst",
-					"type": "int8"
+					"type": "int8",
+					"default": 2
 				},
 				{
 					"name": "Zone 3 sensor",

@@ -84,7 +84,7 @@ void app_ds_init_devices(ds_bus_t *bus){
     owb_use_parasitic_power(bus->owb, parasitic_power);
 }
 
-void app_ds_read_temperature_all(ds_bus_t *bus, float *readings){
+esp_err_t app_ds_read_temperature_all(ds_bus_t *bus, float *readings){
     // Read temperatures more efficiently by starting conversions on all devices at the same time
     int errors_count[DS_MAX_DEVICES] = {0};
     int sample_count = 0;
@@ -102,9 +102,14 @@ void app_ds_read_temperature_all(ds_bus_t *bus, float *readings){
         for (int i = 0; i < bus->device_count; ++i){
             errors[i] = ds18b20_read_temp(bus->devices[i], &readings[i]);
         }
+        for (int i = 0; i < bus->device_count; ++i){
+            if(errors[i] != DS18B20_OK) return ESP_FAIL;
+        }
     } else {
         printf("\nNo DS18B20 devices detected!\n");
+        return ESP_ERR_NOT_FOUND;
     }
+    return ESP_OK;
 }
 
 void app_ds_init(ds_bus_t *buses){
