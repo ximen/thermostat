@@ -37,6 +37,32 @@
 			"name": "MQTT",
 			"std_mqtt": true,
 			"depends_on": "mqtt_enable"
+		}, {
+			"name": "Topics",
+			"short_name": "topics_topic",
+			"depends_on": "mqtt_enable",
+			"elements": [
+				{
+					"name": "Base path 1",
+					"short_name": "base_path1",
+					"type": "string",
+					"size": 30,
+					"default": "floor/hall"
+				}, {
+					"name": "Base path 2",
+					"short_name": "base_path2",
+					"type": "string",
+					"size": 30,
+					"default": "floor/kitchen"
+				}, {
+					"name": "Base path 3",
+					"short_name": "base_path3",
+					"type": "string",
+					"size": 30,
+					"default": "floor/bathroom"
+				}
+
+			]
 		},
 		{
 			"name": "Sensors",
@@ -46,14 +72,6 @@
 					"name": "Sensor 1 type",
 					"short_name": "sensor1_type",
 					"type": "int8"
-				},
-				{
-					"name": "Sensor 1 MQTT topic",
-					"short_name": "sensor1_mqtt",
-					"type": "array",
-					"size": 20,
-					"depends_on": "sensor1_type",
-					"depends_on_value": "1"
 				},
 				{
 					"name": "Sensor 1 Mesh Address",
@@ -69,14 +87,6 @@
 					"type": "int8"
 				},
 				{
-					"name": "Sensor 2 MQTT topic",
-					"short_name": "sensor2_mqtt",
-					"type": "array",
-					"size": 20,
-					"depends_on": "sensor2_type",
-					"depends_on_value": "1"
-				},
-				{
 					"name": "Sensor 2 Mesh Address",
 					"short_name": "sensor2_mesh",
 					"type": "array",
@@ -88,14 +98,6 @@
 					"name": "Sensor 3 type",
 					"short_name": "sensor3_type",
 					"type": "int8"
-				},
-				{
-					"name": "Sensor 3 MQTT topic",
-					"short_name": "sensor3_mqtt",
-					"type": "array",
-					"size": 20,
-					"depends_on": "sensor3_type",
-					"depends_on_value": "1"
 				},
 				{
 					"name": "Sensor 3 Mesh Address",
