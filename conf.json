@@ -77,9 +77,7 @@
 					"name": "Sensor 1 Mesh Address",
 					"short_name": "sensor1_mesh",
 					"type": "array",
-					"size": 4,
-					"depends_on": "sensor1_type",
-					"depends_on_value": "2"
+					"size": 4
 				},
 				{
 					"name": "Sensor 2 type",
@@ -90,9 +88,7 @@
 					"name": "Sensor 2 Mesh Address",
 					"short_name": "sensor2_mesh",
 					"type": "array",
-					"size": 4,
-					"depends_on": "sensor2_type",
-					"depends_on_value": "2"
+					"size": 4
 				},
 				{
 					"name": "Sensor 3 type",
@@ -103,9 +99,7 @@
 					"name": "Sensor 3 Mesh Address",
 					"short_name": "sensor3_mesh",
 					"type": "array",
-					"size": 4,
-					"depends_on": "sensor3_type",
-					"depends_on_value": "2"
+					"size": 4
 				}
 			]
 		},

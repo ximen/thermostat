@@ -47,7 +47,7 @@ TimerHandle_t alarm_timers[CHANNEL_NUMBER];
 TimerHandle_t reset_timer;
 TimerHandle_t temperature_timer;
 bool alarms[CHANNEL_NUMBER] = {true};
-bool enabled[CHANNEL_NUMBER] = {true};
+bool enabled[CHANNEL_NUMBER] = {false};
 float measurements[CHANNEL_NUMBER] = {0xFF};
 
 gpio_num_t outputs[CHANNEL_NUMBER] = {
@@ -101,22 +101,22 @@ static void app_ble_mesh_sensor_client_cb(esp_ble_mesh_sensor_client_cb_event_t 
             uint8_t *data_ptr = data;
             uint16_t primary_addr = esp_ble_mesh_get_primary_element_address();
             uint8_t channel = param->params->model->element->element_addr - primary_addr;
-            ESP_LOGI(TAG, "Channel %d", channel);
+            ESP_LOGD(TAG, "Channel %d", channel);
             for (; len < param->status_cb.sensor_status.marshalled_sensor_data->len;) {
-                uint8_t fmt = ESP_BLE_MESH_GET_SENSOR_DATA_FORMAT(data);
+                    uint8_t fmt = ESP_BLE_MESH_GET_SENSOR_DATA_FORMAT(data);
                 uint8_t data_len = ESP_BLE_MESH_GET_SENSOR_DATA_LENGTH(data, fmt);
                 prop_id = ESP_BLE_MESH_GET_SENSOR_DATA_PROPERTY_ID(data, fmt);
                 mpid_len = (fmt == ESP_BLE_MESH_SENSOR_DATA_FORMAT_A ? ESP_BLE_MESH_SENSOR_DATA_FORMAT_A_MPID_LEN : ESP_BLE_MESH_SENSOR_DATA_FORMAT_B_MPID_LEN);
                 ESP_LOGD(TAG, "Fmt %d, len %d, pid %d", fmt, data_len, prop_id);
                 if (data_len != ESP_BLE_MESH_SENSOR_DATA_ZERO_LEN) {
-                    ESP_LOG_BUFFER_HEX("Sensor data", data + mpid_len, data_len + 1);
+                    //ESP_LOG_BUFFER_HEX("Sensor data", data + mpid_len, data_len + 1);
                     data_ptr = data + mpid_len;
                     len += mpid_len + data_len + 1;
                     if(prop_id == 0x54){
                         float value = (data_ptr[0] + (data_ptr[1] << 8)) / 100;
                         temp_queue_t item;
                         item.sensor_type = ble_mesh;
-                        item.sensor_num = channel;            // One sensor per bus
+                        item.sensor_num = channel - 1;            // One sensor per bus
                         item.value = value;
                         portBASE_TYPE status = xQueueSend(temp_queue, &item, 1000 / portTICK_RATE_MS);
                         if(status != pdPASS){
@@ -168,7 +168,7 @@ static void ds_task(void *pvParameters){
 
 sensor_type_t get_zone_type(uint8_t zone){
     char element[CONFIG_APP_CONFIG_SHORT_NAME_LEN] = {0};
-    sprintf(element, "zone%d_sensor", zone + 1);
+    sprintf(element, "sensor%d_type", zone + 1);
     uint8_t zone_type;
     esp_err_t err = app_config_getValue(element, int8, &zone_type);
     if (err != ESP_OK){
@@ -206,12 +206,14 @@ static void sensor_task(void *pvParameters){
                             measurements[i] = item.value;
                             alarms[i] = 0;
                             xTimerReset(alarm_timers[i], 0);
+                            ESP_LOGI(TAG, "Setting DS18b20 sensor value");
                         }
-                    } else if (item.sensor_type == ble_mesh){
+                    } else if ((item.sensor_type == ble_mesh) && (item.value > 0)){
                         if (item.sensor_num == i){
                             measurements[i] = item.value;
                             alarms[i] = 0;
                             xTimerReset(alarm_timers[i], 0);
+                            ESP_LOGI(TAG, "Setting ble mesh sensor value");
                         }
                     } else if (item.sensor_type == mqtt){
                     }
@@ -240,12 +242,13 @@ static void worker_task(void *pvParameters){
                 ESP_LOGE(TAG, "Error retreiving hysteresis for zone %d", i);
                 alarms[i] = true;
             }
+            ESP_LOGI(TAG, "ch %d: alarm %d, en %d, measure %f, target %d, hyst %d\n", i, alarms[i], enabled[i], measurements[i], target, hyst);
             if((!alarms[i])&&(enabled[i])){
-                if(measurements[i] < (target - hyst)) {
-                    //printf("Turning on\n");
+                if(measurements[i] <= (target - hyst)) {
+                    printf("Turning on ch %d\n", i);
                     gpio_set_level(outputs[i], ON_LEVEL);
                 } else if (measurements[i] > target) {
-                    //printf("Turning off\n");
+                    printf("Turning off ch %d\n", i);
                     gpio_set_level(outputs[i], OFF_LEVEL);
                 }
             }
@@ -451,7 +454,7 @@ void temperature_timer_cb(TimerHandle_t xTimer)
                     strncat(cur_temp_topic, TEMPERATURE_CURRENT_TOPIC, sizeof(TEMPERATURE_CURRENT_TOPIC) + 1);
                     char value_str[4];
                     sprintf(value_str, "%2.1f", measurements[i]);
-                    ESP_LOGI(TAG, "Publishing current temperature %s", value_str);
+                    ESP_LOGI(TAG, "Publishing current temperature %d %s", i, value_str);
                     app_config_mqtt_publish(cur_temp_topic, value_str);
                     free(cur_temp_topic);
                 }
