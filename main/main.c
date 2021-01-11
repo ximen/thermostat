@@ -34,6 +34,7 @@
 #define MAX_TEMP                40
 #define MIN_TEMP                20
 
+#define AVAIL_TOPIC                 "/available"
 #define MODE_STATE_TOPIC            "/mode/state"
 #define MODE_COMMAND_TOPIC          "/mode/set"
 #define TEMPERATURE_STATE_TOPIC     "/temperature/state"
@@ -191,6 +192,29 @@ sensor_type_t get_zone_type(uint8_t zone){
     }
 }
 
+void app_mqtt_notify_avail(uint8_t channel){
+    char element[13] = {0};
+    sprintf(element, "base_path%d", channel + 1);
+    char *base_path;
+    app_config_getValue(element, string, &base_path);
+    if(strlen(base_path)){
+        char *avail_topic = calloc(strlen(base_path) + sizeof(AVAIL_TOPIC) + 1, sizeof(char));
+        if (avail_topic) {
+            strncat(avail_topic, base_path, strlen(base_path) + 1);
+            strncat(avail_topic, AVAIL_TOPIC, sizeof(AVAIL_TOPIC) + 1);
+            if(alarms[channel]){
+                app_config_mqtt_publish(avail_topic, "offline", true);
+            } else {
+                app_config_mqtt_publish(avail_topic, "online", true);
+            }
+        } else {
+            ESP_LOGE(TAG, ALLOC_ERR_STR);
+            free(base_path);
+        }
+        free(avail_topic);
+    }
+}
+
 static void sensor_task(void *pvParameters){
     for (;;){
         temp_queue_t item;
@@ -204,14 +228,24 @@ static void sensor_task(void *pvParameters){
                     if (item.sensor_type == ds18b20){
                         if (item.sensor_num == i){
                             measurements[i] = item.value;
-                            alarms[i] = 0;
+                            if(alarms[i] == 1){
+                                alarms[i] = 0;
+                                app_mqtt_notify_avail(i);
+                            } else {
+                                alarms[i] = 0;
+                            }                            
                             xTimerReset(alarm_timers[i], 0);
                             ESP_LOGI(TAG, "Setting DS18b20 sensor value");
                         }
                     } else if ((item.sensor_type == ble_mesh) && (item.value > 0)){
                         if (item.sensor_num == i){
                             measurements[i] = item.value;
-                            alarms[i] = 0;
+                            if(alarms[i] == 1){
+                                alarms[i] = 0;
+                                app_mqtt_notify_avail(i);
+                            } else {
+                                alarms[i] = 0;
+                            }                            
                             xTimerReset(alarm_timers[i], 0);
                             ESP_LOGI(TAG, "Setting ble mesh sensor value");
                         }
@@ -235,12 +269,22 @@ static void worker_task(void *pvParameters){
             esp_err_t err = app_config_getValue(zone_temp, int8, &target);
             if(err != ESP_OK){
                 ESP_LOGE(TAG, "Error retreiving target temperature for zone %d", i);
-                alarms[i] = true;
+                if (!alarms[i]){
+                    alarms[i] = true;
+                    app_mqtt_notify_avail(i);
+                } else {
+                    alarms[i] = true;
+                }
             }
             err = app_config_getValue(zone_hyst, int8, &hyst);
             if(err != ESP_OK){
                 ESP_LOGE(TAG, "Error retreiving hysteresis for zone %d", i);
-                alarms[i] = true;
+                if (!alarms[i]){
+                    alarms[i] = true;
+                    app_mqtt_notify_avail(i);
+                } else {
+                    alarms[i] = true;
+                }
             }
             ESP_LOGI(TAG, "ch %d: alarm %d, en %d, measure %f, target %d, hyst %d\n", i, alarms[i], enabled[i], measurements[i], target, hyst);
             if((!alarms[i])&&(enabled[i])){
@@ -274,10 +318,10 @@ void app_mqtt_notify_mode(uint8_t channel){
         ESP_LOGI(TAG, "Publishing mode state");
         if(enabled[channel] && !alarms[channel]){
             ESP_LOGI(TAG, "Topic %s, heat", mode_state_topic);
-            app_config_mqtt_publish(mode_state_topic, "heat");
+            app_config_mqtt_publish(mode_state_topic, "heat", true);
         } else {
             ESP_LOGI(TAG, "Topic %s, off", mode_state_topic);
-            app_config_mqtt_publish(mode_state_topic, "off");
+            app_config_mqtt_publish(mode_state_topic, "off", true);
         }
         free(mode_state_topic);
     }
@@ -301,7 +345,7 @@ void app_mqtt_notify_temp(uint8_t channel){
             if(err == ESP_OK){
                 sprintf(value_str, "%d", value);
                 ESP_LOGI(TAG, "Publishing temperature state, topic %s, value %s", temperature_state_topic, value_str);
-                app_config_mqtt_publish(temperature_state_topic, value_str);
+                app_config_mqtt_publish(temperature_state_topic, value_str, true);
             } else {
                 ESP_LOGW(TAG, "Error retreiving temperature for zone %d", channel + 1);
             }
@@ -324,7 +368,7 @@ void app_mqtt_handler_cb(void *handler_args, esp_event_base_t base, int32_t even
                 char element[11] = {0};
                 sprintf(element, "base_path%d", i + 1);
                 char *base_path;
-                esp_err_t err = app_config_getValue(element, string, &base_path);
+                app_config_getValue(element, string, &base_path);
                 ESP_LOGI(TAG,"%s", base_path);
                 if (strlen(base_path) > 0){
                     char *mode_command_topic = (char *)calloc(strlen(base_path) + sizeof(MODE_COMMAND_TOPIC) + 1, sizeof(char));
@@ -350,7 +394,7 @@ void app_mqtt_handler_cb(void *handler_args, esp_event_base_t base, int32_t even
                     esp_mqtt_client_subscribe(client, temperature_command_topic, 0);
                     free(mode_command_topic);
                     free(temperature_command_topic);
-
+                    app_mqtt_notify_avail(i);
                     app_mqtt_notify_mode(i);
                     app_mqtt_notify_temp(i);
                     //xTimerStart(temperature_timer, 0);
@@ -425,7 +469,12 @@ void alarm_timer_cb(TimerHandle_t xTimer){
     for (uint8_t i=0; i<CHANNEL_NUMBER; i++) if(outputs[i] == pin) channel = i;
     
     ESP_LOGE(TAG, "ALARM! No data from temperature sensor for pin %d!", pin);
-    alarms[channel] = true;
+    if (!alarms[channel]){
+        alarms[channel] = true;
+        app_mqtt_notify_avail(channel);
+    } else {
+        alarms[channel] = true;
+    }
     gpio_set_level(outputs[channel], OFF_LEVEL);
 }
 
@@ -455,7 +504,7 @@ void temperature_timer_cb(TimerHandle_t xTimer)
                     char value_str[4];
                     sprintf(value_str, "%2.1f", measurements[i]);
                     ESP_LOGI(TAG, "Publishing current temperature %d %s", i, value_str);
-                    app_config_mqtt_publish(cur_temp_topic, value_str);
+                    app_config_mqtt_publish(cur_temp_topic, value_str, false);
                     free(cur_temp_topic);
                 }
                 else
@@ -493,6 +542,25 @@ void app_main(void){
     gpio_set_intr_type(BUTTON_PIN, GPIO_INTR_ANYEDGE);
     gpio_install_isr_service(0);
     gpio_isr_handler_add(BUTTON_PIN, gpio_isr_handler, (void*) NULL);
+
+    for (uint8_t i = 0; i < CHANNEL_NUMBER; i++){
+        char element[13] = {0};
+        sprintf(element, "base_path%d", i + 1);
+        char *base_path;
+        app_config_getValue(element, string, &base_path);
+        if(strlen(base_path)){
+            char *avail_topic = calloc(strlen(base_path) + sizeof(AVAIL_TOPIC) + 1, sizeof(char));
+            if (avail_topic) {
+                strncat(avail_topic, base_path, strlen(base_path) + 1);
+                strncat(avail_topic, AVAIL_TOPIC, sizeof(AVAIL_TOPIC) + 1);
+                app_config_cbs.lwt.topic = avail_topic;
+                app_config_cbs.lwt.msg = "offline";
+            } else {
+                ESP_LOGE(TAG, ALLOC_ERR_STR);
+                free(base_path);
+            }
+        }
+    }
 
     app_config_cbs.config_srv = app_ble_mesh_config_server_cb;
     app_config_cbs.sensor_client = app_ble_mesh_sensor_client_cb;
